@@ -69,7 +69,8 @@ pacman -Sy <%= repo_name %>/<%= @package %></pre>
                   <pre><%=
                      case v[:flavor]
                      when 'openSUSE', 'SLE'
-                       if @project != "openSUSE:Factory" and @project != "openSUSE:Tumbleweed" and not @project .start_with? "openSUSE:Leap:"
+                       if @project != "openSUSE:Factory" and @project != "openSUSE:Tumbleweed" and not @project .start_with? "openSUSE:Leap:" and not @project .start_with? "openSUSE:Backports:" and not @project .start_with? "SUSE:SLE-15-"
+                       
                          "zypper addrepo #{v[:repo]}#{@project}.repo &&\nzypper refresh &&\n"
                        end
                        if @package.nil?
