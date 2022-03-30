@@ -3,7 +3,13 @@
 .container.my-4
   %h1= _("Using OBS download pages")
   %p
-    = _("Welcome to the OBS download page. This page offers a simple way to show your users the latest builds of your packages and appliances by either embedding its output as an iframe in your project homepage, or by creating a download page for you.")
+    = _(["Welcome to the OBS download page.",
+ "This page offers a simple way",
+ "to show your users",
+ "the latest builds of your packages and appliances",
+ "by either embedding its output",
+ "as an iframe in your project homepage,",
+ "or by creating a download page for you."] .join " ")
   %h2= _("Creating a download page for a package")
   %p
     = _("Just create a link to:")
