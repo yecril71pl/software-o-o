@@ -1,0 +1,22 @@
+- unless flash.blank?
+  .container#flash-messages
+    - %w[success error warn note notice info].each do |flash_type|
+      - if flash[flash_type] && !flash[flash_type].empty?
+        :ruby
+          states = {
+            error: 'alert alert-danger',
+            warn: 'alert alert-warning',
+            success: 'alert alert-success',
+            note: 'alert alert-light',
+            info: 'alert alert-info',
+            notice: 'alert alert-primary'
+          }
+          flash_header = states[flash_type.to_sym]
+
+          body = flash[flash_type].gsub(/\n/, '<br/>')
+          body = sanitize body, tags: %w[a b p ul li br u],
+                          attributes: %w[href title]
+
+      %div{ class: flash_header }
+        %p
+          = body

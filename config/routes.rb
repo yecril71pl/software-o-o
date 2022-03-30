@@ -1,4 +1,4 @@
-SoftwareOO::Application.routes.draw do
+Rails.application.routes.draw  do
 
   root to: 'package#explore'
 
@@ -23,10 +23,9 @@ SoftwareOO::Application.routes.draw do
   namespace 'download' do
     get 'appliance', constraints: ->(request) { request.params[:project].present? }
     get 'package', constraints: ->(request) { request.params[:project].present? && request.params[:package].present? }
-    get 'pattern', constraints: ->(request) { request.params[:project].present? && request.params[:pattern].present? }
 
     # Show documentation if contraints are not met
-    %w(doc appliance package pattern).each do |path|
+    %w(doc appliance package).each do |path|
       get path, action: :doc
     end
   end
@@ -51,7 +50,7 @@ SoftwareOO::Application.routes.draw do
   get 'distributions/testing', to: redirect('https://get.opensuse.org/testing')
   get 'distributions/legacy', to: redirect('https://get.opensuse.org/legacy')
 
-  get 'api/v0/distributions', to: redirect('https://get.opensuse.org/api/v0/distributions')
+  get 'api/v0/distributions', to: redirect('https://get.opensuse.org/api/v0/distributions.json')
 
   get '421', to: redirect('/distributions/leap')
   get '421/:locale', to: redirect('/distributions/leap?locale=%{locale}')

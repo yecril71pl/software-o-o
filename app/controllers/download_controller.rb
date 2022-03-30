@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
-class DownloadController < ApplicationController
+class DownloadController < ObsController
   before_action :set_colors, :hide_search_box
 
   # display documentation
-  def doc; end
+  def doc
+    @build_service = true
+  end
 
   def appliance
     @project = params[:project]
@@ -58,7 +60,7 @@ class DownloadController < ApplicationController
               repo: "https://download.opensuse.org/repositories/#{@project}/#{distro}/",
               package: {}
             }
-            data[distro][:flavor] = set_distro_flavor e.attributes['baseproject']
+            data[distro][:flavor] = set_distro_flavor get_project(distro, e.attributes['baseproject'])
             case e.attributes['baseproject']
             when /^(DISCONTINUED:)?openSUSE:/, /^(DISCONTINUED:)?SUSE:SLE-/
               data[distro][:ymp] = "https://software.opensuse.org/ymp/#{@project}/#{distro}/#{@package}.ymp"
@@ -73,46 +75,6 @@ class DownloadController < ApplicationController
     end
     set_flavors
     @page_title = format(_('Install package %s / %s'), @project, @package)
-    render_page :package
-  end
-
-  def pattern
-    @project = params[:project]
-    @pattern = params[:pattern]
-
-    cache_key = "soo_download_#{@project}_#{@pattern}"
-    @data = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
-      # api_result = ApiConnect::get("/search/published/pattern/id?match=project='#{@project}'+and+filename='#{@pattern}.ymp'")
-      # TODO: workaround - the line above does not return a thing - see https://lists.opensuse.org/opensuse-buildservice/2011-07/msg00088.html
-      # so we search for all files of the project and filter for *.ymp below
-      api_result = ApiConnect.get("/search/published/pattern/id?match=project='#{@project}'")
-      xpath = '/collection/pattern'
-      # logger.debug doc
-
-      if api_result
-        doc = REXML::Document.new api_result.body
-        data = {}
-        doc.elements.each(xpath) do |e|
-          next if e.attributes['filename'] != "#{@pattern}.ymp"
-
-          distro = e.attributes['repository']
-          next if data.key?(distro)
-
-          data[distro] = {
-            repo: "https://download.opensuse.org/repositories/#{@project}/#{distro}/",
-            package: {}
-          }
-          data[distro][:flavor] = set_distro_flavor e.attributes['baseproject']
-          case e.attributes['baseproject']
-          when /^(DISCONTINUED:)?openSUSE:/, /^(DISCONTINUED:)?SUSE:SLE-/
-            data[distro][:ymp] = "https://download.opensuse.org/repositories/#{e.attributes['filepath']}"
-          end
-        end
-        data
-      end
-    end
-    set_flavors
-    @page_title = format(_('Install pattern %s / %s'), @project, @pattern)
     render_page :package
   end
 
@@ -136,15 +98,27 @@ class DownloadController < ApplicationController
 
   def render_page(page_template)
     @box_title = @page_title
+    @build_service = true
     respond_to do |format|
-      format.html { render page_template, layout: 'download' }
+      format.html { render page_template, layout: 'application' }
       format.iframe do
         response.headers.except! 'X-Frame-Options'
-        render page_template, layout: 'iframe.html'
+        render page_template
       end
       # needed for rails < 3.0 to support JSONP
-      format.json { render_json @data.to_json }
+      format.json { render json: @data.to_json }
     end
+  end
+
+  def get_project(distro, baseproject)
+    project = baseproject
+    unless @distributions.nil?
+      distribution = @distributions.find { |d| d[:reponame] == distro }
+      unless distribution.nil?
+        project = distribution[:project]
+      end
+    end
+    project
   end
 
   def set_distro_flavor(distro)
@@ -167,6 +141,8 @@ class DownloadController < ApplicationController
       'Mageia'
     when /^(DISCONTINUED:)?Debian:/
       'Debian'
+    when /^(DISCONTINUED:)?Raspbian:/
+      'Raspbian'
     when /^(DISCONTINUED:)?Ubuntu:/
       'Ubuntu'
     when /^Univention:/

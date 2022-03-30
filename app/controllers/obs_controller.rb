@@ -5,7 +5,7 @@ require 'api_connect'
 class OBSError < StandardError; end
 
 # Handle connection to OBS
-class OBSController < ApplicationController
+class ObsController < ApplicationController
   before_action :set_distributions
   before_action :set_releases_parameters
   before_action :set_baseproject
@@ -87,7 +87,7 @@ class OBSController < ApplicationController
         # one off exception for Leap 15.3, which switched it's default
         # repository name from openSUSE_Leap_15.3 to 15.3
         elsif package.repository == 'openSUSE_Leap_15.3'
-          leap153 = @distributions.find { |d| d[:dist_id] == '19032' }
+          leap153 = @distributions.find { |d| d[:dist_id] == '20043' }
           next unless leap153
 
           package.baseproject = leap153[:project]

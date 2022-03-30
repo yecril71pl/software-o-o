@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class PackageController < OBSController
+class PackageController < ObsController
   before_action :set_search_options, only: %i[show categories]
   before_action :prepare_appdata, :set_categories
 
@@ -41,7 +41,7 @@ class PackageController < OBSController
       @official_projects = @distributions.map { |d| d[:project] }
       # get extra distributions that are not in the default distribution list
       @extra_packages = @packages.reject { |p| @distributions.map { |d| d[:project] }.include? p.baseproject }
-      @extra_dists = @extra_packages.map(&:baseproject).reject(&:nil?).uniq.map { |d| { project: d } }
+      @extra_dists = @extra_packages.filter_map(&:baseproject).uniq.map { |d| { project: d } }
     rescue OBSError
       @hide_search_box = true
       flash.now[:error] = _('Connection to OBS is unavailable. Functionality of this site is limited.')
@@ -92,13 +92,13 @@ class PackageController < OBSController
       next if app[:screenshots].blank?
 
       app[:screenshots].each do |image_url|
-        return redirect_to image_url if type == :screenshot && image_url
+        return redirect_to(image_url, allow_other_host: true) if type == :screenshot && image_url
         next if image_url.blank?
 
         path = begin
           screenshot = Screenshot.new(pkgname, image_url)
           screenshot.thumbnail_path(fetch: true)
-        rescue StandardError => e
+        rescue OpenURI::HTTPError => e
           Rails.logger.error "Error retrieving #{image_url}: #{e}"
           next
         end
@@ -118,14 +118,14 @@ class PackageController < OBSController
   # See https://specifications.freedesktop.org/menu-spec/menu-spec-latest.html
   def set_categories
     @main_sections = [
-      { name: _('Games'), id: 'Games', icon: 'puzzle-outline', categories: ['Game'] },
-      { name: _('Development'), id: 'Development', icon: 'code-outline', categories: ['Development'] },
-      { name: _('Education & Science'), id: 'Education', icon: 'globe-outline', categories: %w[Education Science] },
-      { name: _('Multimedia'), id: 'Multimedia', icon: 'notes-outline', categories: %w[AudioVideo Audio Video] },
-      { name: _('Graphics'), id: 'Graphics', icon: 'brush', categories: ['Graphics'] },
-      { name: _('Office & Productivity'), id: 'Office', icon: 'document', categories: ['Office'] },
-      { name: _('Network'), id: 'Network', icon: 'world-outline', categories: ['Network'] },
-      { name: _('System & Utility'), id: 'Tools', icon: 'spanner-outline', categories: %w[Settings System Utility] }
+      { name: _('Games'), id: 'Games', icon: 'games', categories: ['Game'] },
+      { name: _('Development'), id: 'Development', icon: 'code', categories: ['Development'] },
+      { name: _('Education & Science'), id: 'Education', icon: 'education', categories: %w[Education Science] },
+      { name: _('Multimedia'), id: 'Multimedia', icon: 'multimedia', categories: %w[AudioVideo Audio Video] },
+      { name: _('Graphics'), id: 'Graphics', icon: 'graphics', categories: ['Graphics'] },
+      { name: _('Office & Productivity'), id: 'Office', icon: 'office', categories: ['Office'] },
+      { name: _('Network'), id: 'Network', icon: 'network', categories: ['Network'] },
+      { name: _('System & Utility'), id: 'Tools', icon: 'utils', categories: %w[Settings System Utility] }
     ]
   end
 end

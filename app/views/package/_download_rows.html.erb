@@ -43,16 +43,18 @@
         <%  archs << _("Source") if archs.delete(_("Source")) %>
 
         <!-- 1-click install button -->
-        <% if oneclick && distro[:project].match(/SUSE/) && !(archs.uniq == [_("Source")]) %>
-          <% url = url_for :controller => 'download', :action => 'ymp_without_arch_and_version',
-            :project => result.first, :repository => result.last.first.repository, :package => @pkgname,
-            :base => result.last.first.baseproject, :query => @pkgname%>
-          <a class="btn btn-sm btn-primary" href="<%= url %>"><span class="typcn typcn-flash-outline"></span> <%= _("1 Click Install") %></a>
+        <% unless type.eql? 'official' %>
+          <% if oneclick && distro[:project].match(/SUSE/) && !(archs.uniq == [_("Source")]) %>
+            <% url = url_for :controller => 'download', :action => 'ymp_without_arch_and_version',
+              :project => result.first, :repository => result.last.first.repository, :package => @pkgname,
+              :base => result.last.first.baseproject, :query => @pkgname%>
+            <a class="btn btn-sm btn-primary" href="<%= url %>"><%= icon "oci", "1.15em" %> <%= _("1 Click Install") %></a>
+          <% end %>
         <% end %>
 
         <% project = result.last.first.fetch("realproject", result.first) %>
         <%= link_to download_package_path(project: project, package: @pkgname), class: 'btn btn-sm btn-secondary' do %>
-          <span class="typcn typcn-download-outline"></span>
+          <%= icon "download", "1.15em" %>
           <%= _('Expert Download') %>
         <% end %>
 

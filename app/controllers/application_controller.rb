@@ -10,7 +10,6 @@ require 'json'
 class ApplicationController < ActionController::Base
   before_action :validate_configuration
   before_action :set_language
-  before_action :set_external_urls
 
   helper :all # include all helpers, all the time
   require 'rexml/document'
@@ -90,29 +89,8 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  # special version of render json with JSONP capabilities (only needed for rails < 3.0)
-  def render_json(json, options = {})
-    callback = params[:callback]
-    variable = params[:variable]
-    response = if callback && variable
-                 "var #{variable} = #{json};\n#{callback}(#{variable});"
-               elsif variable
-                 "var #{variable} = #{json};"
-               elsif callback
-                 "#{callback}(#{json});"
-               else
-                 json
-               end
-
-    render({ content_type: 'application/javascript', body: response }.merge(options))
-  end
-
   def valid_package_name?(name)
     name =~ /^[[:alnum:]][-+~\w.:@]*$/
-  end
-
-  def valid_pattern_name?(name)
-    name =~ /^[[:alnum:]][-_+\w.:]*$/
   end
 
   def valid_project_name?(name)
@@ -154,26 +132,5 @@ class ApplicationController < ActionController::Base
     Rails.cache.fetch("appdata/leap#{version}", expires_in: 12.hours) do
       Appdata.new("leap/#{version}").data
     end
-  end
-
-  # set wiki and forum urls, which are different for each language
-  def set_external_urls
-    @wiki_url = case @lang
-                when 'zh_CN'
-                  'https://zh.opensuse.org/'
-                when 'zh_TW'
-                  'https://zh-tw.opensuse.org/'
-                when 'pt_BR'
-                  'https://pt.opensuse.org/'
-                else
-                  "https://#{@lang}.opensuse.org/"
-                end
-
-    @forum_url =  case @lang
-                  when 'zh_CN'
-                    'https://forum.suse.org.cn/'
-                  else
-                    'https://forums.opensuse.org/'
-                  end
   end
 end

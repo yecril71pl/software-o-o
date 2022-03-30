@@ -3,12 +3,11 @@
 <div class="container" id="content">
 <div class="soo_download_#{@project}_#{@package}">
    <% if @data.blank? %>
-   <h1 class="my-5"><%= _("No data for %s / %s") % [ @project, @package.nil? ? @pattern : @package] %></h1>
+   <h1 class="my-5"><%= _("No data for %s / %s") % [ @project, @package] %></h1>
    <% else %>
    <% unless @flavors.blank? %>
      <h1 class="font-weight-normal">
-       <% package = @package.nil? ? @pattern : @package %>
-       <%= _("<b>#{package}</b> from <b>#{project_url(@project)}</b> project") %></h1>
+       <%= _("<b>#{@package}</b> from <b>#{project_url(@project)}</b> project") %></h1>
    <h2 class="my-4"><%= _("Select Your Operating System") %></h2>
    <div class="row py-3">
       <% @flavors.each do |flavor| %>
@@ -27,7 +26,7 @@
                   <% @data.select {|k,v| v.has_key?(:ymp) && v[:flavor] == flavor}.sort.reverse.each do |k,v|%>
                   <div class="text-center col">
                      <a href="<%= v[:ymp] %>"><button class="mb-3 mr-3 w-100 btn btn-primary">
-                     <span class="typcn typcn-lg typcn-download"></span>
+                     <%= icon "download" %>
                      <span><%= k.gsub('_', '&nbsp;').html_safe %></span>
                      </button></a>
                   </div>
@@ -39,7 +38,7 @@
                   </a>
                   <div class="collapse" id="manual<%= flavor %>" aria-labelledby="manual<%= flavor %>">
                   <% @data.select {|k,v| v.has_key?(:repo) && !k.nil? && v[:flavor] == flavor}.sort.reverse.each do |k,v| %>
-                  <% secure_apt_url = v[:flavor] == "Debian" ? "https://wiki.debian.org/SecureApt" : "https://help.ubuntu.com/community/SecureApt" %>
+                  <% secure_apt_url = ['Debian', 'Raspbian'].include?(v[:flavor]) ? "https://wiki.debian.org/SecureApt" : "https://help.ubuntu.com/community/SecureApt" %>
                   <% if v[:flavor] == "Arch" %>
                   <% repo_name = @project.gsub(":", "_") + "_" + k %>
                   <h5><%= _("For <strong>Arch Linux</strong>, edit /etc/pacman.conf and add the following (note that the order of repositories in pacman.conf is important, since pacman always downloads the first found package):") %></h5>
@@ -56,7 +55,7 @@ pacman-key --add - &lt;&lt;&lt; "${key}"
 pacman-key --lsign-key "${fingerprint}"
 
 pacman -Sy <%= repo_name %>/<%= @package %></pre>
-                  <% elsif v[:flavor] == "Ubuntu" or v[:flavor] == "Debian" %>
+                  <% elsif ['Debian', 'Raspbian', 'Ubuntu'].include?(v[:flavor]) %>
                   <h5><%= (_("For <strong>%s</strong> run the following:") % k.gsub('_', '&nbsp;').html_safe).html_safe %></h5>
                   <h6><%= (_("Keep in mind that the owner of the key may distribute updates, packages and repositories that your system will trust (<a href=\"%s\">more information</a>).") % secure_apt_url).html_safe %></h6>
                   <pre><%=
@@ -70,13 +69,7 @@ pacman -Sy <%= repo_name %>/<%= @package %></pre>
                      case v[:flavor]
                      when 'openSUSE', 'SLE'
                        if @project != "openSUSE:Factory" and @project != "openSUSE:Tumbleweed" and not @project .start_with? "openSUSE:Leap:" and not @project .start_with? "openSUSE:Backports:" and not @project .start_with? "SUSE:SLE-15-"
-                       
-                         "zypper addrepo #{v[:repo]}#{@project}.repo &&\nzypper refresh &&\n"
-                       end
-                       if @package.nil?
-                         "zypper install -t pattern #{@pattern}\n"
-                       else
-                         "zypper install #{@package}\n"
+                         "zypper addrepo #{v[:repo]}#{@project}.repo\nzypper refresh\nzypper install #{@package}"
                        end
                      when 'Fedora'
                        version = k.split("_").last
@@ -115,7 +108,7 @@ pacman -Sy <%= repo_name %>/<%= @package %></pre>
                      <p><%= (_("Packages for %s:") % [("<strong>" + k.gsub('_', '&nbsp;') + "</strong>").html_safe]).html_safe %></p>
                      <% v[:package].sort.each do |k,v| %>
                      <a href="<%= v %>"><button class="mb-3 mr-3 w-100 btn btn-primary">
-                     <span class="typcn typcn-lg typcn-download"></span>
+                     <%= icon "download" %>
                      <span><%= k %></span>
                      </button></a>
                      <% end %>
@@ -132,7 +125,7 @@ pacman -Sy <%= repo_name %>/<%= @package %></pre>
    </div>
 </div>
 <% else %>
-<p><%= _("No downloads found for %s in project %s") % [ @package.nil? ? @pattern : @package, @project] %>.</p>
+<p><%= _("No downloads found for %s in project %s") % [ @package, @project] %>.</p>
 <% end %>
 <% end %>
 </div>
